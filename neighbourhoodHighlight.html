@@ -36,15 +36,13 @@
   var highlightActive = false;
 
   var nodesDataset = new vis.DataSet(nodes); // these come from WorldCup2014.js
+  // var nodesDataset = new vis.DataSet([{id: 1, label: 'lol'}])
   var edgesDataset = new vis.DataSet(edges); // these come from WorldCup2014.js
-
-  console.log(nodes);
 
   function redrawAll() {
     var container = document.getElementById('mynetwork');
     var options = {
       nodes: {
-        color: 'green',
         shape: 'dot',
         scaling: {
           min: 10,
@@ -76,53 +74,81 @@
     };
     var data = {nodes:nodesDataset, edges:edgesDataset} // Note: data is coming from ./datasources/WorldCup2014.js
 
+
     network = new vis.Network(container, data, options);
 
     // get a JSON object
-    allNodes = nodesDataset.get({returnType:"Object"});
+    // allNodes = nodesDataset.get({returnType:"Object"});
 
-    network.on("click", (e) => {
-      if (nodes[0].group !== 'nope') {
-        for (let i = 1; i < nodes.length; i++) {
-          // nodes[i].temp = nodes[i].group;
-          console.log(allNodes[i]);
-          allNodes[i].group = 'nope';
-        }
-      }
-      else {
-        for (let i = 0; i < nodes.length; i++) {
-          // nodes[i].group = nodes[i].temp;
-        }
-      }
+    // network.on("click",neighbourhoodHighlight);
 
-      console.log('nodes!!!', nodes);
-
-      allNodes = nodesDataset.get({returnType:"Object"});
-
-      console.log('Updated allNodes', allNodes);
-
-      neighbourhoodHighlight(e);
-    });
-
-    // network.on("selectNode", () => {
-    //   if (nodes[0].group) {
+    // network.on("click", (e) => {
+    //   // console.log('e in click', e);
+    //   //
+    //   if (e.nodes.length === 0) {
+    //     console.log('IF ACTIVATED IN CLICK')
+    //
     //     for (let i = 0; i < nodes.length; i++) {
-    //       nodes[i].temp = nodes[i].group;
-    //       nodes[i].group = 0;
+    //       nodes[i].group = nodes[i].tempGroup;
     //     }
+    //
+    //     console.log('nodes in click', nodes);
     //   }
-    //   else {
-    //     for (let i = 0; i < nodes.length; i++) {
-    //       nodes[i].group = nodes[i].temp;
-    //     }
-    //   }
+    //
     //   nodesDataset.update(nodes);
-    // })
+    //
+    //   allNodes = nodesDataset.get({returnType:"Object"});
+    //
+    //   neighbourhoodHighlight(e);
+    // });
+
+    network.on('selectNode', (e) => {
+      console.log('e in selectNode', e);
+
+      if (nodes[0].group) {
+        console.log('IF ACTIVATED IN SELECTNODE')
+        for (let i = 0; i < nodes.length; i++) {
+          // nodes[i].tempGroup = nodes[i].group;
+          nodes[i].tempGroup = 9999;
+
+          nodes[i].group = undefined;
+        }
+      }
+      // else {
+      //   console.log('ELSE ACTIVATED IN SELECTNODE')
+      //   for (let i = 0; i < nodes.length; i++) {
+      //     nodes[i].group = nodes[i].tempGroup;
+      //   }
+      //
+      //   updateNodes(nodes);
+      //
+      //   for (let i = 0; i < nodes.length; i++) {
+      //     nodes[i].tempGroup = nodes[i].group;
+      //
+      //     nodes[i].group = undefined;
+      //   }
+      // }
+
+      console.log('nodes in selectNode', nodes);
+
+      updateNodes(nodes);
+
+      function updateNodes(nodes) {
+        nodesDataset.update(nodes);
+
+        // allNodes = nodesDataset.get({returnType:"Object"});
+
+        // console.log('nodesDataset before final update', nodesDataset);
+        // return;
+        neighbourhoodHighlight(e);
+      }
+    });
   }
 
   function neighbourhoodHighlight(params) {
+    allNodes = nodesDataset.get({returnType:"Object"});
+
     // if something is selected:
-    console.log(params);
     if (params.nodes.length > 0) {
       highlightActive = true;
       var i,j;
@@ -131,9 +157,8 @@
 
       // mark all nodes as hard to read.
       for (var nodeId in allNodes) {
-        // allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
-        allNodes[nodeId].color = 'red';
-        allNodes[nodeId].label = 'asdf';
+        allNodes[nodeId].color = 'rgba(200,200,200,0.5)';
+        // allNodes[nodeId].color = 'green';
 
         if (allNodes[nodeId].hiddenLabel === undefined) {
           allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
@@ -152,22 +177,16 @@
 
       // all second degree nodes get a different color and their label back
       for (i = 0; i < allConnectedNodes.length; i++) {
-        // console.log('was i activated');
-        // allNodes[allConnectedNodes[i]].color = 'rgba(150,150,150,0.75)';
-        allNodes[allConnectedNodes[i]].color = 'red';
-        // allNodes[allConnectedNodes[i]].label = 'asdf';
-        // if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
-        //   allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
-        //   allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
-        // }
+        allNodes[allConnectedNodes[i]].color = 'rgba(150,150,150,0.75)';
+        if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+          allNodes[allConnectedNodes[i]].label = allNodes[allConnectedNodes[i]].hiddenLabel;
+          allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+        }
       }
 
       // all first degree nodes get their own color and their label back
       for (i = 0; i < connectedNodes.length; i++) {
-        // allNodes[connectedNodes[i]].color = undefined;
-        allNodes[connectedNodes[i]].color = 'red';
-        // console.log('wat', allNodes[connectedNodes[i]]);
-
+        allNodes[connectedNodes[i]].color = undefined;
         if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
           allNodes[connectedNodes[i]].label = allNodes[connectedNodes[i]].hiddenLabel;
           allNodes[connectedNodes[i]].hiddenLabel = undefined;
@@ -176,8 +195,6 @@
 
       // the main node gets its own color and its label back.
       allNodes[selectedNode].color = undefined;
-      // allNodes[selectedNode].color = 'red';
-      console.log('wat', allNodes[nodeId]);
       if (allNodes[selectedNode].hiddenLabel !== undefined) {
         allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
         allNodes[selectedNode].hiddenLabel = undefined;
@@ -186,10 +203,7 @@
     else if (highlightActive === true) {
       // reset all nodes
       for (var nodeId in allNodes) {
-        // allNodes[nodeId].color = undefined;
-        allNodes[nodeId].color = 'red';
-        // console.log('wat', allNodes[nodeId]);
-
+        allNodes[nodeId].color = undefined;
         if (allNodes[nodeId].hiddenLabel !== undefined) {
           allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
           allNodes[nodeId].hiddenLabel = undefined;
@@ -198,22 +212,19 @@
       highlightActive = false
     }
 
-    console.log('This is allNodes', allNodes);
-
     // transform the object into an array
     var updateArray = [];
     for (nodeId in allNodes) {
       if (allNodes.hasOwnProperty(nodeId)) {
-        console.log('An index value', allNodes[nodeId]);
         updateArray.push(allNodes[nodeId]);
+        // updateArray.push(nodes[nodeId]);
+        console.log('allNodes[nodeId]', allNodes[nodeId]);
+        console.log('nodes[nodeId]', nodes[nodeId]);
       }
     }
-    nodesDataset.clear(nodes);
-    console.log('Nodes at the end of callback', nodes);
-    console.log('updateArray at the end of callback', updateArray);
-
     nodesDataset.update(updateArray);
-    console.log('nodesDataset', nodesDataset);
+
+    console.log('nodesDataset final update.', nodesDataset);
   }
 
   redrawAll()
